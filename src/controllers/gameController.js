@@ -9,8 +9,6 @@ const jwt = require('jsonwebtoken');
 router.get('/catalog', async (req, res) => {
     try {
         const games = await gameServices.getAllGames().lean();
-        console.log(games);
-
         res.render('game/catalog', { games });
 
     } catch (err) {
@@ -37,5 +35,18 @@ router.post('/create', async (req, res) => {
         res.redirect('/create');
     }
 });
+
+router.get('/details/:gameId', async (req, res) => {
+
+    const gameId = req.params.gameId;
+
+    try {
+        const game = await gameServices.getGameById(gameId).lean();
+
+        res.render('game/details', { game });
+    } catch (err) {
+        console.log(err);
+    }
+})
 
 module.exports = router;
