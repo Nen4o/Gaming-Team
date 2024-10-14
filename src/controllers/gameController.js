@@ -79,7 +79,7 @@ router.get('/edit/:gameId', async (req, res) => {
 
     try {
         const game = await gameServices.getGameById(gameId).lean();
-        if (res.locals._id != game._id) {
+        if (res.locals._id != game.ownerId) {
             return res.redirect('/404');
         }
         res.render('game/edit', { game })
