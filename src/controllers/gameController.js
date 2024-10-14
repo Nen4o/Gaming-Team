@@ -17,6 +17,10 @@ router.get('/catalog', async (req, res) => {
 })
 
 router.get('/create', (req, res) => {
+    if (!res.locals.isAuthenticated) {
+        res.redirect('/404');
+    }
+
     res.render('game/create');
 })
 
@@ -42,10 +46,76 @@ router.get('/details/:gameId', async (req, res) => {
 
     try {
         const game = await gameServices.getGameById(gameId).lean();
+        const userId = res.locals._id;
 
-        res.render('game/details', { game });
+        const isOwner = game.ownerId == userId ? true : false;
+        const isUserBought = game.boughtBy.find((usersId) => usersId == userId);
+
+        res.render('game/details', { game, isOwner, isUserBought });
     } catch (err) {
         console.log(err);
+    }
+})
+
+router.get('/buy/:gameId', async (req, res) => {
+    const gameId = req.params.gameId;
+
+    try {
+        const game = await gameServices.getGameById(gameId);
+
+        game.boughtBy.push(res.locals._id);
+
+        await gameServices.updateGame(game);
+        res.redirect('/details/' + gameId);
+
+    } catch (err) {
+        console.log(err);
+    }
+
+})
+
+router.get('/edit/:gameId', async (req, res) => {
+    const gameId = req.params.gameId;
+
+    try {
+        const game = await gameServices.getGameById(gameId).lean();
+        if (res.locals._id != game._id) {
+            return res.redirect('/404');
+        }
+        res.render('game/edit', { game })
+    } catch (err) {
+        console.log(err);
+    }
+})
+
+router.post('/edit/:gameId', async (req, res) => {
+    const gameId = req.params.gameId;
+    const updatedData = req.body;
+
+
+    try {
+        updatedData._id = gameId;
+        await gameServices.updateGame(updatedData);
+        res.redirect('/404');
+    } catch (err) {
+        console.log(err);
+    }
+})
+
+router.get('/delete/:gameId', async (req, res) => {
+    const gameId = req.params.gameId;
+
+    try {
+        const game = await gameServices.getGameById(gameId);
+
+        if (game.ownerId != res.locals._id) {
+            return res.redirect('/details/' + gameId);
+        }
+
+        await gameServices.deleteGameById(gameId);
+        res.redirect('/catalog');
+    } catch (err) {
+
     }
 })
 
