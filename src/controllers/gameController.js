@@ -35,8 +35,8 @@ router.post('/create', async (req, res) => {
         await gameServices.createGame(gameData);
         res.redirect('/catalog');
     } catch (err) {
-        console.log(err);
-        res.redirect('/create');
+        const errorMessage = err.errors ? Object.values(err.errors)[0]?.message : err.message;
+        res.render('game/create', { error: errorMessage, gameData });
     }
 });
 
